@@ -1,74 +1,86 @@
-// pages/detail/detail.js
+// pages/detail/detail.js - 云数据库版本
 const app = getApp()
 
 Page({
   data: {
     memory: {},
     comments: [],
-    commentInput: ''
+    commentInput: '',
+    loading: true
   },
-  
+
   onLoad(options) {
     const id = options.id
     if (id) {
       this.loadMemory(id)
     }
   },
-  
+
   onShow() {
     // 每次显示页面时重新加载数据
     if (this.data.memory.id) {
       this.loadMemory(this.data.memory.id)
     }
   },
-  
-  // 加载回忆详情
+
+  // 加载回忆详情（异步）
   loadMemory(id) {
-    const memories = app.getMemories()
-    const memory = memories.find(m => m.id === id)
-    
-    if (memory) {
-      // 处理数据
-      const processedMemory = {
-        ...memory,
-        formattedDate: app.formatDate(memory.date),
-        moodEmoji: memory.mood ? app.getMoodEmoji(memory.mood) : '',
-        moodText: memory.mood ? app.getMoodText(memory.mood) : ''
+    this.setData({ loading: true })
+
+    // 同时加载回忆和评论
+    Promise.all([
+      app.getMemoryById(id),
+      app.getComments(id)
+    ]).then(([memory, comments]) => {
+      if (memory) {
+        // 处理回忆数据
+        const processedMemory = {
+          ...memory,
+          formattedDate: app.formatDate(memory.date || memory.createdAt),
+          moodEmoji: memory.mood ? app.getMoodEmoji(memory.mood) : '',
+          moodText: memory.mood ? app.getMoodText(memory.mood) : ''
+        }
+
+        // 处理评论数据
+        const processedComments = comments.map(comment => ({
+          ...comment,
+          relativeTime: app.formatRelativeTime(comment.time)
+        }))
+
+        this.setData({
+          memory: processedMemory,
+          comments: processedComments,
+          loading: false
+        })
+      } else {
+        this.setData({ loading: false })
+        wx.showToast({ title: '回忆不存在', icon: 'none' })
       }
-      
-      // 加载评论
-      const comments = app.getComments(id)
-      const processedComments = comments.map(comment => ({
-        ...comment,
-        relativeTime: app.formatRelativeTime(comment.time)
-      }))
-      
-      this.setData({
-        memory: processedMemory,
-        comments: processedComments
-      })
-    }
+    }).catch(err => {
+      console.error('加载详情失败:', err)
+      this.setData({ loading: false })
+    })
   },
-  
+
   // 预览图片
   previewImage(e) {
     const src = e.currentTarget.dataset.src
+    const images = this.data.memory.images || []
     wx.previewImage({
       current: src,
-      urls: this.data.memory.images
+      urls: images
     })
   },
-  
+
   // 编辑回忆
   editMemory() {
-    // 跳转到编辑页面，传递ID参数
     wx.showToast({
       title: '编辑功能开发中...',
       icon: 'none'
     })
   },
-  
-  // 删除回忆
+
+  // 删除回忆（异步）
   deleteMemory() {
     wx.showModal({
       title: '确认删除',
@@ -76,44 +88,43 @@ Page({
       confirmColor: '#e74c3c',
       success: (res) => {
         if (res.confirm) {
-          app.deleteMemory(this.data.memory.id)
-          wx.showToast({
-            title: '删除成功',
-            icon: 'success'
+          app.deleteMemory(this.data.memory.id).then(success => {
+            if (success) {
+              wx.showToast({
+                title: '删除成功',
+                icon: 'success'
+              })
+              setTimeout(() => {
+                wx.navigateBack()
+              }, 1500)
+            } else {
+              wx.showToast({ title: '删除失败', icon: 'none' })
+            }
           })
-          
-          // 返回上一页
-          setTimeout(() => {
-            wx.navigateBack()
-          }, 1500)
         }
       }
     })
   },
-  
+
   // 分享回忆
   shareMemory() {
-    // 显示分享菜单
     wx.showActionSheet({
       itemList: ['分享给朋友', '分享到朋友圈', '复制链接'],
       success: (res) => {
         switch (res.tapIndex) {
           case 0:
-            // 分享给朋友 - 使用微信分享
             wx.showToast({
               title: '请点击右上角分享',
               icon: 'none'
             })
             break
           case 1:
-            // 分享到朋友圈
             wx.showToast({
               title: '请点击右上角分享',
               icon: 'none'
             })
             break
           case 2:
-            // 复制链接
             wx.setClipboardData({
               data: `室友回忆录 - ${this.data.memory.title}`,
               success: () => {
@@ -128,15 +139,15 @@ Page({
       }
     })
   },
-  
+
   // 评论输入
   onCommentInput(e) {
     this.setData({
       commentInput: e.detail.value
     })
   },
-  
-  // 添加评论
+
+  // 添加评论（异步）
   addComment() {
     const content = this.data.commentInput.trim()
     if (!content) {
@@ -146,28 +157,33 @@ Page({
       })
       return
     }
-    
+
+    const userInfo = app.globalData.userInfo
     const comment = {
-      author: '我',
+      author: userInfo ? userInfo.nickName : '匿名室友',
+      avatarUrl: userInfo ? userInfo.avatarUrl : '',
       content: content
     }
-    
-    app.addComment(this.data.memory.id, comment)
-    
-    // 重新加载评论
-    this.loadMemory(this.data.memory.id)
-    
-    // 清空输入框
-    this.setData({
-      commentInput: ''
-    })
-    
-    wx.showToast({
-      title: '留言成功！',
-      icon: 'success'
+
+    app.addComment(this.data.memory.id, comment).then(result => {
+      if (result) {
+        // 重新加载评论
+        this.loadMemory(this.data.memory.id)
+
+        this.setData({
+          commentInput: ''
+        })
+
+        wx.showToast({
+          title: '留言成功！',
+          icon: 'success'
+        })
+      }
+    }).catch(err => {
+      console.error('留言失败:', err)
     })
   },
-  
+
   // 分享给朋友
   onShareAppMessage() {
     return {

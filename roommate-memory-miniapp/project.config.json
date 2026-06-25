@@ -40,5 +40,6 @@
   "libVersion": "2.25.4",
   "appid": "wx1234567890abcdef",
   "projectname": "roommate-memory-miniapp",
+  "cloudfunctionRoot": "cloudfunctions/",
   "condition": {}
 }
