@@ -1,0 +1,300 @@
+/* pages/add/add.wxss */
+
+.page-add {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* 类型选择 */
+.type-selector {
+  padding: 60rpx 30rpx;
+}
+
+.type-title {
+  text-align: center;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 60rpx;
+}
+
+.type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+}
+
+.type-btn {
+  background: white;
+  border-radius: var(--radius);
+  padding: 40rpx;
+  border: 2rpx solid var(--rule);
+  text-align: center;
+  transition: var(--transition);
+}
+
+.type-btn:active {
+  border-color: var(--accent);
+  background: rgba(232, 155, 108, 0.05);
+}
+
+.type-icon {
+  font-size: 60rpx;
+  margin-bottom: 20rpx;
+}
+
+.type-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 10rpx;
+}
+
+.type-desc {
+  font-size: 26rpx;
+  color: var(--muted);
+}
+
+/* 表单容器 */
+.form-container {
+  background: white;
+  min-height: 100vh;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid var(--rule);
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.back-btn {
+  font-size: 28rpx;
+  color: var(--accent);
+  margin-right: 20rpx;
+}
+
+.form-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.form-body {
+  padding: 30rpx;
+}
+
+/* 上传区域 */
+.upload-area {
+  border: 2rpx dashed var(--rule);
+  border-radius: var(--radius);
+  padding: 60rpx;
+  text-align: center;
+  background: var(--bg);
+}
+
+.upload-icon {
+  font-size: 60rpx;
+  margin-bottom: 20rpx;
+}
+
+.upload-text {
+  font-size: 28rpx;
+  color: var(--muted);
+}
+
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.preview-item {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.preview-item image {
+  width: 100%;
+  height: 100%;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+}
+
+/* 聊天输入区域 */
+.chat-input-area {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 24rpx;
+}
+
+.chat-messages {
+  max-height: 400rpx;
+  overflow-y: auto;
+  margin-bottom: 20rpx;
+}
+
+.chat-message-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx;
+  background: white;
+  border-radius: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.speaker {
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 24rpx;
+}
+
+.content {
+  flex: 1;
+  font-size: 26rpx;
+}
+
+.remove-msg {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+}
+
+.chat-input-row picker {
+  flex: 1;
+}
+
+.chat-input-row input {
+  flex: 2;
+  padding: 16rpx;
+  background: white;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+}
+
+/* 标签输入 */
+.tag-input {
+  margin-bottom: 16rpx;
+}
+
+.tag-input input {
+  width: 100%;
+  padding: 16rpx 20rpx;
+  border: 1rpx solid var(--rule);
+  border-radius: 8rpx;
+  font-size: 26rpx;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.tag-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  background: rgba(232, 155, 108, 0.1);
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: var(--accent);
+}
+
+.remove-tag {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+}
+
+/* 情绪选择器 */
+.mood-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.mood-btn {
+  padding: 12rpx 24rpx;
+  border: 1rpx solid var(--rule);
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  background: white;
+}
+
+.mood-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+/* 选择器值 */
+.picker-value {
+  padding: 16rpx 20rpx;
+  background: white;
+  border: 1rpx solid var(--rule);
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  color: var(--ink);
+}
+
+/* 表单操作 */
+.form-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 40rpx;
+  padding-top: 30rpx;
+  border-top: 1rpx solid var(--rule);
+}
+
+.form-actions .btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+}
+
+/* 故事编辑器 */
+.story-editor {
+  min-height: 400rpx;
+}

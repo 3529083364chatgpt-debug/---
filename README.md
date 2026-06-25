@@ -60,10 +60,39 @@ const firebaseConfig = {
 2. 登录后即可看到共享数据
 3. 添加的回忆会实时同步给所有登录用户
 
+## 微信小程序版本
+
+除了网页版本，我们还提供了 **微信小程序版本**，方便在微信中直接使用：
+
+### 小程序特性
+- **无需配置**：开箱即用，无需 Firebase 配置
+- **本地存储**：数据存储在微信本地，每人独立
+- **原生体验**：微信小程序原生性能，流畅使用
+- **便捷分享**：支持微信好友和朋友圈分享
+
+### 小程序目录
+- `roommate-memory-miniapp/` - 微信小程序完整源码
+
+### 使用方法
+1. 下载并安装 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
+2. 导入 `roommate-memory-miniapp` 目录
+3. 填写 AppID（可使用测试号）
+4. 编译并预览
+
+### 小程序功能
+- 时间线首页：按时间倒序展示回忆
+- 分类浏览：照片、聊天、故事三大分类
+- 添加回忆：支持照片、聊天、故事三种类型
+- 详情查看：查看回忆详情和留言
+- 分享功能：分享给微信好友
+
+> 💡 **提示**：小程序版本适合个人使用，如需多人共享请使用网页版本。
+
 ## 项目结构
 
 - `roommate-memory-PRD/` - 产品需求文档
 - `roommate-memory-app/` - 完整HTML应用源码
+- `roommate-memory-miniapp/` - 微信小程序源码
 - `docs/` - GitHub Pages 部署目录
 - `firebase-config.js` - Firebase 配置文件
 - `app-localstorage.js` - 本地存储版本（无需配置）

@@ -1,0 +1,84 @@
+<!--pages/detail/detail.wxml-->
+<view class="page-detail">
+  <!-- 回忆内容 -->
+  <view class="memory-detail">
+    <view class="detail-header">
+      <view class="detail-title">{{memory.title}}</view>
+      <view class="detail-meta">
+        <text class="detail-time">{{memory.formattedDate}}</text>
+        <text class="detail-author" wx:if="{{memory.createdBy}}">由 {{memory.createdBy}} 创建</text>
+      </view>
+      <view class="detail-tags">
+        <view class="tag tag-person" wx:for="{{memory.persons}}" wx:key="*this">{{item}}</view>
+        <view class="tag tag-mood" wx:if="{{memory.mood}}">{{memory.moodEmoji}} {{memory.moodText}}</view>
+      </view>
+    </view>
+    
+    <!-- 照片内容 -->
+    <view class="detail-images" wx:if="{{memory.type === 'photo' && memory.images && memory.images.length > 0}}">
+      <image wx:for="{{memory.images}}" wx:key="*this" src="{{item}}" mode="widthFix" bindtap="previewImage" data-src="{{item}}"></image>
+    </view>
+    
+    <!-- 聊天内容 -->
+    <view class="detail-chat" wx:if="{{memory.type === 'chat' && memory.messages && memory.messages.length > 0}}">
+      <view class="chat-msg" wx:for="{{memory.messages}}" wx:key="speaker">
+        <view class="chat-avatar">{{item.speaker[0]}}</view>
+        <view class="chat-content">
+          <view class="chat-name">{{item.speaker}}</view>
+          <view class="chat-bubble">{{item.content}}</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 文字内容 -->
+    <view class="detail-text" wx:if="{{memory.description}}">
+      <text>{{memory.description}}</text>
+    </view>
+    
+    <view class="detail-text" wx:if="{{memory.type === 'story' && memory.content}}">
+      <text>{{memory.content}}</text>
+    </view>
+  </view>
+  
+  <!-- 操作按钮 -->
+  <view class="action-buttons">
+    <button class="action-btn" bindtap="editMemory">
+      <text>✏️ 编辑</text>
+    </button>
+    <button class="action-btn delete" bindtap="deleteMemory">
+      <text>🗑️ 删除</text>
+    </button>
+    <button class="action-btn share" bindtap="shareMemory">
+      <text>📤 分享</text>
+    </button>
+  </view>
+  
+  <!-- 留言区 -->
+  <view class="comments-section">
+    <view class="section-header">
+      <text class="section-title">💬 留言互动</text>
+    </view>
+    
+    <view class="comments-list">
+      <view class="comment-item" wx:for="{{comments}}" wx:key="id">
+        <view class="comment-avatar">{{item.author[0]}}</view>
+        <view class="comment-content">
+          <view class="comment-header">
+            <text class="comment-name">{{item.author}}</text>
+            <text class="comment-time">{{item.relativeTime}}</text>
+          </view>
+          <view class="comment-text">{{item.content}}</view>
+        </view>
+      </view>
+      
+      <view class="empty-comments" wx:if="{{comments.length === 0}}">
+        <text>还没有留言，来留下第一条吧！</text>
+      </view>
+    </view>
+    
+    <view class="comment-input">
+      <input type="text" placeholder="写下你的留言..." value="{{commentInput}}" bindinput="onCommentInput" bindconfirm="addComment"></input>
+      <button class="btn btn-primary btn-small" bindtap="addComment">发送</button>
+    </view>
+  </view>
+</view>

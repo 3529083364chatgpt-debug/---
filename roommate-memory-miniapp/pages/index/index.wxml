@@ -1,0 +1,77 @@
+<!--pages/index/index.wxml-->
+<view class="page-index">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input">
+      <icon type="search" size="16" color="#8A7E6D"></icon>
+      <input type="text" placeholder="搜索回忆..." bindinput="onSearchInput" value="{{searchQuery}}"></input>
+    </view>
+  </view>
+  
+  <!-- 那年今日 -->
+  <view class="on-this-day" wx:if="{{onThisDayMemories.length > 0}}">
+    <view class="section-header">
+      <text class="section-icon">⏰</text>
+      <text class="section-title">那年今日</text>
+    </view>
+    <scroll-view class="on-this-day-scroll" scroll-x="true">
+      <view class="on-this-day-card" wx:for="{{onThisDayMemories}}" wx:key="id" bindtap="onMemoryTap" data-id="{{item.id}}">
+        <view class="card-year">{{item.year}}年</view>
+        <view class="card-title">{{item.title}}</view>
+        <view class="card-preview">{{item.preview}}</view>
+      </view>
+    </scroll-view>
+  </view>
+  
+  <!-- 时间线 -->
+  <view class="timeline">
+    <view class="timeline-group" wx:for="{{timelineGroups}}" wx:key="month">
+      <view class="timeline-date">{{item.month}}</view>
+      <view class="memory-cards">
+        <view class="memory-card" wx:for="{{item.memories}}" wx:for-item="memory" wx:key="id" bindtap="onMemoryTap" data-id="{{memory.id}}">
+          <view class="card-header">
+            <view class="card-type {{memory.type}}">
+              <icon wx:if="{{memory.type === 'photo'}}" type="image" size="16"></icon>
+              <icon wx:elif="{{memory.type === 'chat'}}" type="chat" size="16"></icon>
+              <icon wx:else type="book" size="16"></icon>
+            </view>
+            <view class="card-title">{{memory.title}}</view>
+            <view class="card-time">{{memory.relativeTime}}</view>
+          </view>
+          <view class="card-body">
+            <view class="card-preview" wx:if="{{memory.preview}}">{{memory.preview}}</view>
+            <view class="card-images" wx:if="{{memory.type === 'photo' && memory.images && memory.images.length > 0}}">
+              <image wx:for="{{memory.images}}" wx:for-item="img" wx:key="*this" src="{{img}}" mode="aspectFill" class="card-image"></image>
+            </view>
+            <view class="card-chat-preview" wx:if="{{memory.type === 'chat' && memory.messages && memory.messages.length > 0}}">
+              <view class="chat-msg" wx:for="{{memory.messages}}" wx:for-item="msg" wx:key="speaker" wx:if="{{index < 2}}">
+                <view class="chat-avatar">{{msg.speaker[0]}}</view>
+                <view class="chat-content">
+                  <view class="chat-name">{{msg.speaker}}</view>
+                  <view class="chat-bubble">{{msg.content}}</view>
+                </view>
+              </view>
+              <view class="more-messages" wx:if="{{memory.messages.length > 2}}">还有 {{memory.messages.length - 2}} 条消息</view>
+            </view>
+          </view>
+          <view class="card-footer">
+            <view class="card-tags">
+              <view class="tag tag-person" wx:for="{{memory.persons}}" wx:for-item="person" wx:key="*this">{{person}}</view>
+              <view class="tag tag-mood" wx:if="{{memory.mood}}">{{memory.moodEmoji}} {{memory.moodText}}</view>
+            </view>
+            <view class="card-stats">
+              <text class="stat-item">💬 {{memory.commentsCount || 0}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{memories.length === 0}}">
+    <view class="empty-icon">📖</view>
+    <view class="empty-title">还没有回忆呢</view>
+    <view class="empty-desc">点击底部"添加"按钮，开始记录你们的故事吧！</view>
+  </view>
+</view>

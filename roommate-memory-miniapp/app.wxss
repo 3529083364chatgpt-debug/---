@@ -1,0 +1,215 @@
+/* app.wxss - 全局样式 */
+
+/* 设计变量 */
+page {
+  --bg: #FAF7F2;
+  --bg2: #F2EDE4;
+  --ink: #3D3528;
+  --muted: #8A7E6D;
+  --rule: #E5DDD0;
+  --accent: #E89B6C;
+  --accent2: #7BA69C;
+  --shadow: rgba(61, 53, 40, 0.08);
+  --shadow-hover: rgba(61, 53, 40, 0.12);
+  --radius: 12rpx;
+  --radius-sm: 8rpx;
+  --transition: all 0.3s ease;
+  
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+/* 通用容器 */
+.container {
+  padding: 0 30rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  border: 1rpx solid var(--rule);
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 12rpx var(--shadow);
+}
+
+/* 按钮样式 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 32rpx;
+  border-radius: var(--radius-sm);
+  font-size: 28rpx;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1rpx solid var(--rule);
+}
+
+.btn-small {
+  padding: 10rpx 20rpx;
+  font-size: 24rpx;
+}
+
+/* 标签样式 */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.tag-person {
+  background: rgba(232, 155, 108, 0.1);
+  color: var(--accent);
+}
+
+.tag-mood {
+  background: rgba(123, 166, 156, 0.1);
+  color: var(--accent2);
+}
+
+/* 表单样式 */
+.form-group {
+  margin-bottom: 30rpx;
+}
+
+.form-group label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12rpx;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group picker {
+  width: 100%;
+  padding: 20rpx 24rpx;
+  border: 1rpx solid var(--rule);
+  border-radius: var(--radius-sm);
+  font-size: 28rpx;
+  color: var(--ink);
+  background: white;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+  min-height: 200rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 100rpx 40rpx;
+}
+
+.empty-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin: 0 auto 30rpx;
+  background: var(--bg2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state h3 {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 16rpx;
+}
+
+.empty-state p {
+  font-size: 26rpx;
+  color: var(--muted);
+}
+
+/* 加载状态 */
+.loading {
+  text-align: center;
+  padding: 40rpx;
+  color: var(--muted);
+  font-size: 26rpx;
+}
+
+/* 提示消息 */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--ink);
+  color: white;
+  padding: 24rpx 48rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.toast.show {
+  opacity: 1;
+}
+
+/* 工具类 */
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+.mt-20 {
+  margin-top: 20rpx;
+}
+
+.mb-20 {
+  margin-bottom: 20rpx;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-1 {
+  flex: 1;
+}

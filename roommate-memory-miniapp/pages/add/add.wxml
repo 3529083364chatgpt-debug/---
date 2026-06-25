@@ -1,0 +1,226 @@
+<!--pages/add/add.wxml-->
+<view class="page-add">
+  <!-- 类型选择 -->
+  <view class="type-selector" wx:if="{{!selectedType}}">
+    <view class="type-title">选择回忆类型</view>
+    <view class="type-options">
+      <view class="type-btn" bindtap="selectType" data-type="photo">
+        <view class="type-icon">📷</view>
+        <view class="type-name">照片回忆</view>
+        <view class="type-desc">记录美好瞬间</view>
+      </view>
+      <view class="type-btn" bindtap="selectType" data-type="chat">
+        <view class="type-icon">💬</view>
+        <view class="type-name">聊天记录</view>
+        <view class="type-desc">保存有趣对话</view>
+      </view>
+      <view class="type-btn" bindtap="selectType" data-type="story">
+        <view class="type-icon">📖</view>
+        <view class="type-name">文字故事</view>
+        <view class="type-desc">写下你们的故事</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 照片表单 -->
+  <view class="form-container" wx:if="{{selectedType === 'photo'}}">
+    <view class="form-header">
+      <view class="back-btn" bindtap="goBack">← 返回</view>
+      <view class="form-title">添加照片回忆</view>
+    </view>
+    
+    <view class="form-body">
+      <view class="form-group">
+        <label>标题 *</label>
+        <input type="text" placeholder="给这段回忆起个名字" value="{{formData.title}}" bindinput="onInput" data-field="title"></input>
+      </view>
+      
+      <view class="form-group">
+        <label>照片 *</label>
+        <view class="upload-area" bindtap="chooseImage">
+          <view class="upload-icon">📷</view>
+          <view class="upload-text">点击上传照片</view>
+        </view>
+        <view class="image-preview" wx:if="{{formData.images.length > 0}}">
+          <view class="preview-item" wx:for="{{formData.images}}" wx:key="*this">
+            <image src="{{item}}" mode="aspectFill"></image>
+            <view class="remove-btn" catchtap="removeImage" data-index="{{index}}">×</view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="form-group">
+        <label>描述</label>
+        <textarea placeholder="写下这张照片背后的故事..." value="{{formData.description}}" bindinput="onInput" data-field="description"></textarea>
+      </view>
+      
+      <view class="form-group">
+        <label>时间 *</label>
+        <picker mode="date" value="{{formData.date}}" bindchange="onDateChange">
+          <view class="picker-value">{{formData.date || '选择日期'}}</view>
+        </picker>
+      </view>
+      
+      <view class="form-group">
+        <label>人物标签</label>
+        <view class="tag-input">
+          <input type="text" placeholder="输入名字，按回车添加" value="{{tagInput}}" bindinput="onTagInput" bindconfirm="addTag"></input>
+        </view>
+        <view class="tags-list">
+          <view class="tag-item" wx:for="{{formData.persons}}" wx:key="*this">
+            <text>{{item}}</text>
+            <view class="remove-tag" catchtap="removeTag" data-index="{{index}}">×</view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="form-group">
+        <label>情绪标签</label>
+        <view class="mood-selector">
+          <view class="mood-btn {{formData.mood === 'happy' ? 'active' : ''}}" bindtap="selectMood" data-mood="happy">😊 开心</view>
+          <view class="mood-btn {{formData.mood === 'touched' ? 'active' : ''}}" bindtap="selectMood" data-mood="touched">🥺 感动</view>
+          <view class="mood-btn {{formData.mood === 'funny' ? 'active' : ''}}" bindtap="selectMood" data-mood="funny">😂 搞笑</view>
+          <view class="mood-btn {{formData.mood === 'miss' ? 'active' : ''}}" bindtap="selectMood" data-mood="miss">😢 怀念</view>
+          <view class="mood-btn {{formData.mood === 'warm' ? 'active' : ''}}" bindtap="selectMood" data-mood="warm">🥰 温暖</view>
+        </view>
+      </view>
+      
+      <view class="form-actions">
+        <button class="btn btn-secondary" bindtap="goBack">取消</button>
+        <button class="btn btn-primary" bindtap="saveMemory">保存回忆</button>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 聊天表单 -->
+  <view class="form-container" wx:if="{{selectedType === 'chat'}}">
+    <view class="form-header">
+      <view class="back-btn" bindtap="goBack">← 返回</view>
+      <view class="form-title">添加聊天记录</view>
+    </view>
+    
+    <view class="form-body">
+      <view class="form-group">
+        <label>标题 *</label>
+        <input type="text" placeholder="这段对话的主题" value="{{formData.title}}" bindinput="onInput" data-field="title"></input>
+      </view>
+      
+      <view class="form-group">
+        <label>聊天记录 *</label>
+        <view class="chat-input-area">
+          <view class="chat-messages">
+            <view class="chat-message-item" wx:for="{{formData.messages}}" wx:key="index">
+              <text class="speaker">{{item.speaker}}</text>
+              <text class="content">{{item.content}}</text>
+              <view class="remove-msg" catchtap="removeChatMessage" data-index="{{index}}">×</view>
+            </view>
+          </view>
+          <view class="chat-input-row">
+            <picker mode="selector" range="{{speakers}}" value="{{selectedSpeakerIndex}}" bindchange="onSpeakerChange">
+              <view class="picker-value">{{formData.messages.length > 0 ? speakers[selectedSpeakerIndex] : '选择发言人'}}</view>
+            </picker>
+            <input type="text" placeholder="输入消息内容" value="{{chatInput}}" bindinput="onChatInput" bindconfirm="addChatMessage"></input>
+            <button class="btn btn-small" bindtap="addChatMessage">添加</button>
+          </view>
+        </view>
+      </view>
+      
+      <view class="form-group">
+        <label>描述</label>
+        <textarea placeholder="这段对话的背景..." value="{{formData.description}}" bindinput="onInput" data-field="description"></textarea>
+      </view>
+      
+      <view class="form-group">
+        <label>时间 *</label>
+        <picker mode="date" value="{{formData.date}}" bindchange="onDateChange">
+          <view class="picker-value">{{formData.date || '选择日期'}}</view>
+        </picker>
+      </view>
+      
+      <view class="form-group">
+        <label>人物标签</label>
+        <view class="tag-input">
+          <input type="text" placeholder="输入名字，按回车添加" value="{{tagInput}}" bindinput="onTagInput" bindconfirm="addTag"></input>
+        </view>
+        <view class="tags-list">
+          <view class="tag-item" wx:for="{{formData.persons}}" wx:key="*this">
+            <text>{{item}}</text>
+            <view class="remove-tag" catchtap="removeTag" data-index="{{index}}">×</view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="form-group">
+        <label>情绪标签</label>
+        <view class="mood-selector">
+          <view class="mood-btn {{formData.mood === 'happy' ? 'active' : ''}}" bindtap="selectMood" data-mood="happy">😊 开心</view>
+          <view class="mood-btn {{formData.mood === 'touched' ? 'active' : ''}}" bindtap="selectMood" data-mood="touched">🥺 感动</view>
+          <view class="mood-btn {{formData.mood === 'funny' ? 'active' : ''}}" bindtap="selectMood" data-mood="funny">😂 搞笑</view>
+          <view class="mood-btn {{formData.mood === 'miss' ? 'active' : ''}}" bindtap="selectMood" data-mood="miss">😢 怀念</view>
+          <view class="mood-btn {{formData.mood === 'warm' ? 'active' : ''}}" bindtap="selectMood" data-mood="warm">🥰 温暖</view>
+        </view>
+      </view>
+      
+      <view class="form-actions">
+        <button class="btn btn-secondary" bindtap="goBack">取消</button>
+        <button class="btn btn-primary" bindtap="saveMemory">保存回忆</button>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 故事表单 -->
+  <view class="form-container" wx:if="{{selectedType === 'story'}}">
+    <view class="form-header">
+      <view class="back-btn" bindtap="goBack">← 返回</view>
+      <view class="form-title">添加文字故事</view>
+    </view>
+    
+    <view class="form-body">
+      <view class="form-group">
+        <label>标题 *</label>
+        <input type="text" placeholder="故事的标题" value="{{formData.title}}" bindinput="onInput" data-field="title"></input>
+      </view>
+      
+      <view class="form-group">
+        <label>正文 *</label>
+        <textarea placeholder="写下你们的故事..." class="story-editor" value="{{formData.content}}" bindinput="onInput" data-field="content"></textarea>
+      </view>
+      
+      <view class="form-group">
+        <label>时间 *</label>
+        <picker mode="date" value="{{formData.date}}" bindchange="onDateChange">
+          <view class="picker-value">{{formData.date || '选择日期'}}</view>
+        </picker>
+      </view>
+      
+      <view class="form-group">
+        <label>人物标签</label>
+        <view class="tag-input">
+          <input type="text" placeholder="输入名字，按回车添加" value="{{tagInput}}" bindinput="onTagInput" bindconfirm="addTag"></input>
+        </view>
+        <view class="tags-list">
+          <view class="tag-item" wx:for="{{formData.persons}}" wx:key="*this">
+            <text>{{item}}</text>
+            <view class="remove-tag" catchtap="removeTag" data-index="{{index}}">×</view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="form-group">
+        <label>情绪标签</label>
+        <view class="mood-selector">
+          <view class="mood-btn {{formData.mood === 'happy' ? 'active' : ''}}" bindtap="selectMood" data-mood="happy">😊 开心</view>
+          <view class="mood-btn {{formData.mood === 'touched' ? 'active' : ''}}" bindtap="selectMood" data-mood="touched">🥺 感动</view>
+          <view class="mood-btn {{formData.mood === 'funny' ? 'active' : ''}}" bindtap="selectMood" data-mood="funny">😂 搞笑</view>
+          <view class="mood-btn {{formData.mood === 'miss' ? 'active' : ''}}" bindtap="selectMood" data-mood="miss">😢 怀念</view>
+          <view class="mood-btn {{formData.mood === 'warm' ? 'active' : ''}}" bindtap="selectMood" data-mood="warm">🥰 温暖</view>
+        </view>
+      </view>
+      
+      <view class="form-actions">
+        <button class="btn btn-secondary" bindtap="goBack">取消</button>
+        <button class="btn btn-primary" bindtap="saveMemory">保存回忆</button>
+      </view>
+    </view>
+  </view>
+</view>

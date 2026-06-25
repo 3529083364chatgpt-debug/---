@@ -1,0 +1,82 @@
+<!--pages/category/category.wxml-->
+<view class="page-category">
+  <!-- 分类标签 -->
+  <view class="category-tabs">
+    <view class="tab-btn {{activeCategory === 'all' ? 'active' : ''}}" bindtap="switchCategory" data-category="all">
+      <text>全部</text>
+    </view>
+    <view class="tab-btn {{activeCategory === 'photo' ? 'active' : ''}}" bindtap="switchCategory" data-category="photo">
+      <text>📷 照片</text>
+    </view>
+    <view class="tab-btn {{activeCategory === 'chat' ? 'active' : ''}}" bindtap="switchCategory" data-category="chat">
+      <text>💬 聊天</text>
+    </view>
+    <view class="tab-btn {{activeCategory === 'story' ? 'active' : ''}}" bindtap="switchCategory" data-category="story">
+      <text>📖 故事</text>
+    </view>
+  </view>
+  
+  <!-- 筛选选项 -->
+  <view class="filter-options" wx:if="{{showFilters}}">
+    <view class="filter-group">
+      <text class="filter-label">时间范围</text>
+      <view class="filter-buttons">
+        <view class="filter-btn {{timeFilter === 'all' ? 'active' : ''}}" bindtap="setTimeFilter" data-time="all">全部</view>
+        <view class="filter-btn {{timeFilter === 'month' ? 'active' : ''}}" bindtap="setTimeFilter" data-time="month">本月</view>
+        <view class="filter-btn {{timeFilter === 'year' ? 'active' : ''}}" bindtap="setTimeFilter" data-time="year">今年</view>
+      </view>
+    </view>
+    
+    <view class="filter-group">
+      <text class="filter-label">情绪标签</text>
+      <view class="filter-buttons">
+        <view class="filter-btn {{moodFilter === '' ? 'active' : ''}}" bindtap="setMoodFilter" data-mood="">全部</view>
+        <view class="filter-btn {{moodFilter === 'happy' ? 'active' : ''}}" bindtap="setMoodFilter" data-mood="happy">😊 开心</view>
+        <view class="filter-btn {{moodFilter === 'touched' ? 'active' : ''}}" bindtap="setMoodFilter" data-mood="touched">🥺 感动</view>
+        <view class="filter-btn {{moodFilter === 'funny' ? 'active' : ''}}" bindtap="setMoodFilter" data-mood="funny">😂 搞笑</view>
+        <view class="filter-btn {{moodFilter === 'miss' ? 'active' : ''}}" bindtap="setMoodFilter" data-mood="miss">😢 怀念</view>
+        <view class="filter-btn {{moodFilter === 'warm' ? 'active' : ''}}" bindtap="setMoodFilter" data-mood="warm">🥰 温暖</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 切换筛选显示 -->
+  <view class="filter-toggle" bindtap="toggleFilters">
+    <text>{{showFilters ? '隐藏筛选' : '显示筛选'}}</text>
+    <text class="toggle-icon">{{showFilters ? '▲' : '▼'}}</text>
+  </view>
+  
+  <!-- 回忆列表 -->
+  <view class="memory-list">
+    <view class="memory-card" wx:for="{{filteredMemories}}" wx:key="id" bindtap="onMemoryTap" data-id="{{item.id}}">
+      <view class="card-header">
+        <view class="card-type {{item.type}}">
+          <icon wx:if="{{item.type === 'photo'}}" type="image" size="16"></icon>
+          <icon wx:elif="{{item.type === 'chat'}}" type="chat" size="16"></icon>
+          <icon wx:else type="book" size="16"></icon>
+        </view>
+        <view class="card-title">{{item.title}}</view>
+        <view class="card-time">{{item.relativeTime}}</view>
+      </view>
+      <view class="card-body">
+        <view class="card-preview" wx:if="{{item.preview}}">{{item.preview}}</view>
+        <view class="card-images" wx:if="{{item.type === 'photo' && item.images && item.images.length > 0}}">
+          <image wx:for="{{item.images}}" wx:for-item="img" wx:key="*this" src="{{img}}" mode="aspectFill" class="card-image"></image>
+        </view>
+      </view>
+      <view class="card-footer">
+        <view class="card-tags">
+          <view class="tag tag-person" wx:for="{{item.persons}}" wx:for-item="person" wx:key="*this">{{person}}</view>
+          <view class="tag tag-mood" wx:if="{{item.mood}}">{{item.moodEmoji}} {{item.moodText}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{filteredMemories.length === 0}}">
+    <view class="empty-icon">🔍</view>
+    <view class="empty-title">没有找到回忆</view>
+    <view class="empty-desc">尝试调整筛选条件或添加新的回忆</view>
+  </view>
+</view>
