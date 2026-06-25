@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>室友专属赛博回忆录</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <i class="fas fa-heart"></i>
+        <span>室友回忆录</span>
+      </div>
+      <div class="nav-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="搜索回忆...">
+      </div>
+      <div class="nav-actions">
+        <button class="btn-icon" id="filterBtn" title="筛选">
+          <i class="fas fa-filter"></i>
+        </button>
+        <button class="btn-icon" id="shareBtn" title="分享">
+          <i class="fas fa-share-alt"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 那年今日组件 -->
+  <section class="on-this-day" id="onThisDay">
+    <div class="container">
+      <div class="section-header">
+        <i class="fas fa-clock"></i>
+        <h2>那年今日</h2>
+      </div>
+      <div class="on-this-day-content" id="onThisDayContent">
+        <!-- 动态加载 -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 主要内容区域 -->
+  <main class="main-content">
+    <div class="container">
+      <!-- 分类标签页 -->
+      <div class="category-tabs">
+        <button class="tab-btn active" data-category="all">
+          <i class="fas fa-th"></i>
+          <span>全部</span>
+        </button>
+        <button class="tab-btn" data-category="photo">
+          <i class="fas fa-image"></i>
+          <span>照片</span>
+        </button>
+        <button class="tab-btn" data-category="chat">
+          <i class="fas fa-comments"></i>
+          <span>聊天</span>
+        </button>
+        <button class="tab-btn" data-category="story">
+          <i class="fas fa-book"></i>
+          <span>故事</span>
+        </button>
+      </div>
+
+      <!-- 筛选面板 -->
+      <div class="filter-panel" id="filterPanel">
+        <div class="filter-group">
+          <label>时间范围</label>
+          <div class="filter-options">
+            <button class="filter-btn active" data-time="all">全部</button>
+            <button class="filter-btn" data-time="month">本月</button>
+            <button class="filter-btn" data-time="year">今年</button>
+            <button class="filter-btn" data-time="custom">自定义</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>人物标签</label>
+          <div class="filter-options" id="personFilters">
+            <!-- 动态加载 -->
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>情绪标签</label>
+          <div class="filter-options">
+            <button class="filter-btn" data-mood="happy">😊 开心</button>
+            <button class="filter-btn" data-mood="touched">🥺 感动</button>
+            <button class="filter-btn" data-mood="funny">😂 搞笑</button>
+            <button class="filter-btn" data-mood="miss">😢 怀念</button>
+            <button class="filter-btn" data-mood="warm">🥰 温暖</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 时间线 -->
+      <div class="timeline" id="timeline">
+        <!-- 动态加载 -->
+      </div>
+
+      <!-- 空状态 -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <i class="fas fa-book-open"></i>
+        </div>
+        <h3>还没有回忆呢</h3>
+        <p>点击右下角的 "+" 按钮，开始记录你们的故事吧！</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- 悬浮添加按钮 -->
+  <button class="fab" id="addBtn" title="添加回忆">
+    <i class="fas fa-plus"></i>
+  </button>
+
+  <!-- 录入模态框 -->
+  <div class="modal" id="addModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>添加回忆</h2>
+        <button class="modal-close" id="closeAddModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- 类型选择 -->
+        <div class="type-selector" id="typeSelector">
+          <button class="type-btn" data-type="photo">
+            <i class="fas fa-image"></i>
+            <span>照片回忆</span>
+          </button>
+          <button class="type-btn" data-type="chat">
+            <i class="fas fa-comments"></i>
+            <span>聊天记录</span>
+          </button>
+          <button class="type-btn" data-type="story">
+            <i class="fas fa-book"></i>
+            <span>文字故事</span>
+          </button>
+        </div>
+
+        <!-- 照片表单 -->
+        <form class="memory-form" id="photoForm" style="display: none;">
+          <div class="form-group">
+            <label>标题 *</label>
+            <input type="text" id="photoTitle" placeholder="给这段回忆起个名字" required>
+          </div>
+          <div class="form-group">
+            <label>照片 *</label>
+            <div class="upload-area" id="photoUpload">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <p>点击或拖拽上传照片</p>
+              <input type="file" id="photoInput" accept="image/*" multiple hidden>
+            </div>
+            <div class="photo-preview" id="photoPreview"></div>
+          </div>
+          <div class="form-group">
+            <label>描述</label>
+            <textarea id="photoDesc" placeholder="写下这张照片背后的故事..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>时间 *</label>
+            <input type="datetime-local" id="photoDate" required>
+          </div>
+          <div class="form-group">
+            <label>人物标签</label>
+            <div class="tag-input-container">
+              <input type="text" id="photoPersonInput" placeholder="输入室友名字，按回车添加">
+              <div class="tags-list" id="photoPersonTags"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>情绪标签</label>
+            <div class="mood-selector">
+              <button type="button" class="mood-btn" data-mood="happy">😊 开心</button>
+              <button type="button" class="mood-btn" data-mood="touched">🥺 感动</button>
+              <button type="button" class="mood-btn" data-mood="funny">😂 搞笑</button>
+              <button type="button" class="mood-btn" data-mood="miss">😢 怀念</button>
+              <button type="button" class="mood-btn" data-mood="warm">🥰 温暖</button>
+            </div>
+          </div>
+          <input type="hidden" id="photoMood">
+          <input type="hidden" id="photoEditId">
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="cancelPhoto">取消</button>
+            <button type="submit" class="btn btn-primary">保存回忆</button>
+          </div>
+        </form>
+
+        <!-- 聊天表单 -->
+        <form class="memory-form" id="chatForm" style="display: none;">
+          <div class="form-group">
+            <label>标题 *</label>
+            <input type="text" id="chatTitle" placeholder="这段对话的主题" required>
+          </div>
+          <div class="form-group">
+            <label>聊天记录 *</label>
+            <div class="chat-input-area">
+              <div class="chat-messages" id="chatMessages"></div>
+              <div class="chat-input-row">
+                <select id="chatSpeaker">
+                  <option value="">选择发言人</option>
+                </select>
+                <input type="text" id="chatContent" placeholder="输入消息内容">
+                <button type="button" class="btn btn-small" id="addChatMsg">添加</button>
+              </div>
+            </div>
+            <p class="form-hint">也可以直接粘贴聊天截图：</p>
+            <div class="upload-area small" id="chatUpload">
+              <i class="fas fa-image"></i>
+              <p>上传聊天截图</p>
+              <input type="file" id="chatInput" accept="image/*" hidden>
+            </div>
+            <div class="photo-preview" id="chatPreview"></div>
+          </div>
+          <div class="form-group">
+            <label>描述</label>
+            <textarea id="chatDesc" placeholder="这段对话的背景..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>时间 *</label>
+            <input type="datetime-local" id="chatDate" required>
+          </div>
+          <div class="form-group">
+            <label>人物标签</label>
+            <div class="tag-input-container">
+              <input type="text" id="chatPersonInput" placeholder="输入室友名字，按回车添加">
+              <div class="tags-list" id="chatPersonTags"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>情绪标签</label>
+            <div class="mood-selector">
+              <button type="button" class="mood-btn" data-mood="happy">😊 开心</button>
+              <button type="button" class="mood-btn" data-mood="touched">🥺 感动</button>
+              <button type="button" class="mood-btn" data-mood="funny">😂 搞笑</button>
+              <button type="button" class="mood-btn" data-mood="miss">😢 怀念</button>
+              <button type="button" class="mood-btn" data-mood="warm">🥰 温暖</button>
+            </div>
+          </div>
+          <input type="hidden" id="chatMood">
+          <input type="hidden" id="chatEditId">
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="cancelChat">取消</button>
+            <button type="submit" class="btn btn-primary">保存回忆</button>
+          </div>
+        </form>
+
+        <!-- 故事表单 -->
+        <form class="memory-form" id="storyForm" style="display: none;">
+          <div class="form-group">
+            <label>标题 *</label>
+            <input type="text" id="storyTitle" placeholder="故事的标题" required>
+          </div>
+          <div class="form-group">
+            <label>正文 *</label>
+            <textarea id="storyContent" class="story-editor" placeholder="写下你们的故事..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label>时间 *</label>
+            <input type="datetime-local" id="storyDate" required>
+          </div>
+          <div class="form-group">
+            <label>人物标签</label>
+            <div class="tag-input-container">
+              <input type="text" id="storyPersonInput" placeholder="输入室友名字，按回车添加">
+              <div class="tags-list" id="storyPersonTags"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>情绪标签</label>
+            <div class="mood-selector">
+              <button type="button" class="mood-btn" data-mood="happy">😊 开心</button>
+              <button type="button" class="mood-btn" data-mood="touched">🥺 感动</button>
+              <button type="button" class="mood-btn" data-mood="funny">😂 搞笑</button>
+              <button type="button" class="mood-btn" data-mood="miss">😢 怀念</button>
+              <button type="button" class="mood-btn" data-mood="warm">🥰 温暖</button>
+            </div>
+          </div>
+          <input type="hidden" id="storyMood">
+          <input type="hidden" id="storyEditId">
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="cancelStory">取消</button>
+            <button type="submit" class="btn btn-primary">保存回忆</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 详情模态框 -->
+  <div class="modal" id="detailModal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="detailTitle">回忆详情</h2>
+        <div class="modal-actions">
+          <button class="btn-icon" id="editMemory" title="编辑">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn-icon" id="deleteMemory" title="删除">
+            <i class="fas fa-trash"></i>
+          </button>
+          <button class="btn-icon" id="shareMemory" title="分享">
+            <i class="fas fa-share-alt"></i>
+          </button>
+          <button class="modal-close" id="closeDetailModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="detail-content" id="detailContent">
+          <!-- 动态加载 -->
+        </div>
+        
+        <!-- 留言区 -->
+        <div class="comments-section">
+          <h3>留言互动</h3>
+          <div class="comments-list" id="commentsList">
+            <!-- 动态加载 -->
+          </div>
+          <div class="comment-input">
+            <input type="text" id="commentInput" placeholder="写下你的留言...">
+            <button class="btn btn-primary" id="addComment">发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分享模态框 -->
+  <div class="modal" id="shareModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>分享回忆</h2>
+        <button class="modal-close" id="closeShareModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="share-options">
+          <label class="share-option">
+            <input type="radio" name="shareType" value="all" checked>
+            <span>分享整本回忆录</span>
+          </label>
+          <label class="share-option">
+            <input type="radio" name="shareType" value="single">
+            <span>分享单条回忆</span>
+          </label>
+        </div>
+        <div class="share-link-container">
+          <input type="text" id="shareLink" readonly>
+          <button class="btn btn-primary" id="copyLink">
+            <i class="fas fa-copy"></i> 复制链接
+          </button>
+        </div>
+        <div class="share-password">
+          <label>
+            <input type="checkbox" id="enablePassword"> 设置访问密码
+          </label>
+          <input type="password" id="sharePassword" placeholder="输入密码" disabled>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示消息 -->
+  <div class="toast" id="toast">
+    <div class="toast-content">
+      <i class="fas fa-check-circle"></i>
+      <span id="toastMessage">操作成功</span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
