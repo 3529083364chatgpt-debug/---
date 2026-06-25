@@ -1,10 +1,255 @@
-// ===== 数据存储 =====
-const STORAGE_KEY = 'roommate-memory-data';
-const COMMENTS_KEY = 'roommate-memory-comments';
+// ===== Firebase 数据存储 =====
+// 注意：此版本使用 Firebase Realtime Database 实现多人共享
 
-// 初始化数据
-let memories = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-let comments = JSON.parse(localStorage.getItem(COMMENTS_KEY)) || {};
+// 全局变量
+let memories = [];
+let comments = {};
+let currentUser = null;
+let memoriesRef = null;
+let commentsRef = null;
+
+// ===== 初始化 =====
+document.addEventListener('DOMContentLoaded', () => {
+  // 检查 Firebase 是否已初始化
+  if (typeof firebase === 'undefined') {
+    console.error('Firebase SDK 未加载');
+    showToast('Firebase 配置错误，请检查配置文件');
+    return;
+  }
+
+  // 设置认证状态监听
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      // 用户已登录
+      currentUser = user;
+      console.log('用户已登录:', user.email);
+      showUserStatus(user.email);
+      hideLoginModal();
+      initFirebaseListeners();
+    } else {
+      // 用户未登录
+      currentUser = null;
+      console.log('用户未登录');
+      showLoginModal();
+      hideUserStatus();
+    }
+  });
+
+  // 初始化事件监听
+  initEventListeners();
+});
+
+// ===== 用户认证 =====
+function showLoginModal() {
+  document.getElementById('loginModal').classList.add('show');
+  document.getElementById('addBtn').style.display = 'none';
+  document.getElementById('emptyState').innerHTML = `
+    <div class="empty-icon">
+      <i class="fas fa-lock"></i>
+    </div>
+    <h3>请先登录</h3>
+    <p>登录后即可查看和添加回忆</p>
+  `;
+  document.getElementById('emptyState').classList.add('show');
+  document.getElementById('timeline').innerHTML = '';
+}
+
+function hideLoginModal() {
+  document.getElementById('loginModal').classList.remove('show');
+  document.getElementById('addBtn').style.display = 'block';
+}
+
+function showUserStatus(email) {
+  const status = document.getElementById('userStatus');
+  document.getElementById('userEmail').textContent = email;
+  status.style.display = 'flex';
+}
+
+function hideUserStatus() {
+  document.getElementById('userStatus').style.display = 'none';
+}
+
+function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!email || !password) {
+    showToast('请输入邮箱和密码');
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      showToast('登录成功！');
+    })
+    .catch(error => {
+      console.error('登录失败:', error);
+      if (error.code === 'auth/user-not-found') {
+        showToast('用户不存在，请先注册');
+      } else if (error.code === 'auth/wrong-password') {
+        showToast('密码错误');
+      } else {
+        showToast('登录失败: ' + error.message);
+      }
+    });
+}
+
+function register() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!email || !password) {
+    showToast('请输入邮箱和密码');
+    return;
+  }
+
+  if (password.length < 6) {
+    showToast('密码至少需要6位');
+    return;
+  }
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => {
+      showToast('注册成功！已自动登录');
+    })
+    .catch(error => {
+      console.error('注册失败:', error);
+      if (error.code === 'auth/email-already-in-use') {
+        showToast('该邮箱已被注册，请直接登录');
+      } else {
+        showToast('注册失败: ' + error.message);
+      }
+    });
+}
+
+function logout() {
+  auth.signOut()
+    .then(() => {
+      showToast('已退出登录');
+    })
+    .catch(error => {
+      console.error('退出失败:', error);
+    });
+}
+
+// ===== Firebase 数据监听 =====
+function initFirebaseListeners() {
+  // 监听回忆数据
+  memoriesRef = database.ref(MEMORIES_REF);
+  memoriesRef.on('value', snapshot => {
+    const data = snapshot.val();
+    memories = data ? Object.values(data) : [];
+    console.log('回忆数据已加载:', memories.length, '条');
+    renderTimeline();
+    renderOnThisDay();
+    updatePersonFilters();
+  });
+
+  // 监听评论数据
+  commentsRef = database.ref(COMMENTS_REF);
+  commentsRef.on('value', snapshot => {
+    const data = snapshot.val();
+    comments = data || {};
+    console.log('评论数据已加载');
+  });
+}
+
+// ===== 数据操作 =====
+function saveMemory(memoryData) {
+  if (!currentUser || !memoriesRef) {
+    showToast('请先登录');
+    return false;
+  }
+
+  // 添加用户信息
+  memoryData.createdBy = currentUser.email;
+  memoryData.createdAt = new Date().toISOString();
+
+  // 保存到 Firebase
+  const newRef = memoriesRef.push();
+  memoryData.id = newRef.key;
+  
+  return newRef.set(memoryData)
+    .then(() => {
+      console.log('回忆已保存:', memoryData.id);
+      return true;
+    })
+    .catch(error => {
+      console.error('保存失败:', error);
+      showToast('保存失败: ' + error.message);
+      return false;
+    });
+}
+
+function updateMemory(id, updates) {
+  if (!currentUser || !memoriesRef) {
+    showToast('请先登录');
+    return false;
+  }
+
+  return database.ref(`${MEMORIES_REF}/${id}`).update(updates)
+    .then(() => {
+      console.log('回忆已更新:', id);
+      return true;
+    })
+    .catch(error => {
+      console.error('更新失败:', error);
+      showToast('更新失败: ' + error.message);
+      return false;
+    });
+}
+
+function deleteMemory(id) {
+  if (!currentUser || !memoriesRef) {
+    showToast('请先登录');
+    return false;
+  }
+
+  if (!confirm('确定要删除这条回忆吗？删除后无法恢复。')) {
+    return false;
+  }
+
+  return database.ref(`${MEMORIES_REF}/${id}`).remove()
+    .then(() => {
+      // 同时删除相关评论
+      database.ref(`${COMMENTS_REF}/${id}`).remove();
+      console.log('回忆已删除:', id);
+      showToast('回忆已删除');
+      document.getElementById('detailModal').classList.remove('show');
+      return true;
+    })
+    .catch(error => {
+      console.error('删除失败:', error);
+      showToast('删除失败: ' + error.message);
+      return false;
+    });
+}
+
+function addComment(memoryId, content) {
+  if (!currentUser || !commentsRef) {
+    showToast('请先登录');
+    return;
+  }
+
+  const comment = {
+    id: generateId(),
+    author: currentUser.email.split('@')[0], // 使用邮箱前缀作为用户名
+    content: content,
+    time: new Date().toISOString(),
+    createdBy: currentUser.email
+  };
+
+  database.ref(`${COMMENTS_REF}/${memoryId}/${comment.id}`).set(comment)
+    .then(() => {
+      console.log('评论已添加');
+      showToast('留言成功！');
+      renderComments(memoryId);
+    })
+    .catch(error => {
+      console.error('评论添加失败:', error);
+      showToast('留言失败: ' + error.message);
+    });
+}
 
 // ===== 工具函数 =====
 function generateId() {
@@ -47,11 +292,6 @@ function showToast(message) {
   toastMessage.textContent = message;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
-  localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
 }
 
 function getMoodEmoji(mood) {
@@ -151,6 +391,13 @@ function renderTimeline(filteredMemories = null) {
   
   if (data.length === 0) {
     timeline.innerHTML = '';
+    emptyState.innerHTML = `
+      <div class="empty-icon">
+        <i class="fas fa-book-open"></i>
+      </div>
+      <h3>还没有回忆呢</h3>
+      <p>点击右下角的 "+" 按钮，开始记录你们的故事吧！</p>
+    `;
     emptyState.classList.add('show');
     return;
   }
@@ -243,7 +490,7 @@ function renderMemoryCard(memory) {
     </div>
   `;
   
-  const commentsCount = comments[memory.id]?.length || 0;
+  const commentsCount = comments[memory.id] ? Object.keys(comments[memory.id]).length : 0;
   
   return `
     <div class="memory-card" data-id="${memory.id}">
@@ -263,6 +510,7 @@ function renderMemoryCard(memory) {
         ${tagsHtml}
         <div class="memory-card-stats">
           <span><i class="fas fa-comment"></i> ${commentsCount}</span>
+          <span><i class="fas fa-user"></i> ${memory.createdBy?.split('@')[0] || '匿名'}</span>
         </div>
       </div>
     </div>
@@ -314,6 +562,7 @@ function showMemoryDetail(id) {
   let detailHtml = `
     <div class="detail-meta">
       <span class="time">${formatDate(memory.date)}</span>
+      <span class="author">由 ${memory.createdBy?.split('@')[0] || '匿名'} 创建</span>
       <div class="tags">
         ${memory.persons?.map(person => `<span class="tag tag-person">${person}</span>`).join('') || ''}
         ${memory.mood ? `<span class="tag tag-mood">${getMoodEmoji(memory.mood)} ${getMoodText(memory.mood)}</span>` : ''}
@@ -361,47 +610,38 @@ function showMemoryDetail(id) {
   // 存储当前查看的记忆ID
   modal.dataset.memoryId = id;
   
+  // 检查是否是创建者，显示/隐藏编辑和删除按钮
+  const isCreator = memory.createdBy === currentUser?.email;
+  document.getElementById('editMemory').style.display = isCreator ? 'block' : 'none';
+  document.getElementById('deleteMemory').style.display = isCreator ? 'block' : 'none';
+  
   modal.classList.add('show');
 }
 
 function renderComments(memoryId) {
   const commentsList = document.getElementById('commentsList');
-  const memoryComments = comments[memoryId] || [];
+  const memoryComments = comments[memoryId] || {};
+  const commentsArray = Object.values(memoryComments);
   
-  if (memoryComments.length === 0) {
+  if (commentsArray.length === 0) {
     commentsList.innerHTML = '<p style="color: var(--muted); font-size: 14px;">还没有留言，来留下第一条吧！</p>';
     return;
   }
   
-  commentsList.innerHTML = memoryComments.map(comment => `
-    <div class="comment-item">
-      <div class="comment-avatar">${comment.author.charAt(0)}</div>
-      <div class="comment-content">
-        <div class="comment-header">
-          <span class="comment-name">${comment.author}</span>
-          <span class="comment-time">${formatRelativeTime(comment.time)}</span>
+  commentsList.innerHTML = commentsArray
+    .sort((a, b) => new Date(b.time) - new Date(a.time))
+    .map(comment => `
+      <div class="comment-item">
+        <div class="comment-avatar">${comment.author.charAt(0)}</div>
+        <div class="comment-content">
+          <div class="comment-header">
+            <span class="comment-name">${comment.author}</span>
+            <span class="comment-time">${formatRelativeTime(comment.time)}</span>
+          </div>
+          <div class="comment-text">${comment.content}</div>
         </div>
-        <div class="comment-text">${comment.content}</div>
       </div>
-    </div>
-  `).join('');
-}
-
-function addComment(memoryId, content) {
-  if (!comments[memoryId]) {
-    comments[memoryId] = [];
-  }
-  
-  comments[memoryId].push({
-    id: generateId(),
-    author: '我',
-    content: content,
-    time: new Date().toISOString()
-  });
-  
-  saveData();
-  renderComments(memoryId);
-  showToast('留言成功！');
+    `).join('');
 }
 
 // ===== 录入功能 =====
@@ -612,11 +852,9 @@ function removeChatMessage(index) {
   });
 }
 
-function saveMemory(type) {
+function saveMemoryFromForm(type) {
   let memoryData = {
-    id: generateId(),
-    type: type,
-    createdAt: new Date().toISOString()
+    type: type
   };
   
   if (type === 'photo') {
@@ -675,15 +913,18 @@ function saveMemory(type) {
     });
   }
   
-  memories.push(memoryData);
-  saveData();
-  
-  return true;
+  return saveMemory(memoryData);
 }
 
 function editMemory(id) {
   const memory = memories.find(m => m.id === id);
   if (!memory) return;
+  
+  // 检查权限
+  if (memory.createdBy !== currentUser?.email) {
+    showToast('只能编辑自己创建的回忆');
+    return;
+  }
   
   // 关闭详情模态框
   document.getElementById('detailModal').classList.remove('show');
@@ -818,19 +1059,6 @@ function editMemory(id) {
   }, 100);
 }
 
-function deleteMemory(id) {
-  if (!confirm('确定要删除这条回忆吗？删除后无法恢复。')) return;
-  
-  memories = memories.filter(m => m.id !== id);
-  delete comments[id];
-  saveData();
-  
-  document.getElementById('detailModal').classList.remove('show');
-  renderTimeline();
-  renderOnThisDay();
-  showToast('回忆已删除');
-}
-
 function updatePersonFilters() {
   const container = document.getElementById('personFilters');
   const persons = new Set();
@@ -842,33 +1070,6 @@ function updatePersonFilters() {
   container.innerHTML = Array.from(persons).map(person => 
     `<button class="filter-btn" data-person="${person}">${person}</button>`
   ).join('');
-}
-
-// ===== 分享功能 =====
-function openShareModal(memoryId = null) {
-  const modal = document.getElementById('shareModal');
-  const linkInput = document.getElementById('shareLink');
-  
-  // 生成分享链接
-  const shareUrl = memoryId 
-    ? `${window.location.origin}${window.location.pathname}?memory=${memoryId}`
-    : `${window.location.origin}${window.location.pathname}`;
-  
-  linkInput.value = shareUrl;
-  
-  // 如果是单条分享，选中对应选项
-  if (memoryId) {
-    document.querySelector('input[name="shareType"][value="single"]').checked = true;
-  }
-  
-  modal.classList.add('show');
-}
-
-function copyShareLink() {
-  const linkInput = document.getElementById('shareLink');
-  linkInput.select();
-  document.execCommand('copy');
-  showToast('链接已复制到剪贴板！');
 }
 
 // ===== 筛选功能 =====
@@ -911,12 +1112,7 @@ function applyFilters() {
 }
 
 // ===== 事件监听 =====
-document.addEventListener('DOMContentLoaded', () => {
-  // 初始化
-  renderTimeline();
-  renderOnThisDay();
-  updatePersonFilters();
-  
+function initEventListeners() {
   // 导航栏搜索
   const searchInput = document.getElementById('searchInput');
   searchInput.addEventListener('input', (e) => {
@@ -1122,31 +1318,31 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (editId) {
       // 编辑模式
-      const index = memories.findIndex(m => m.id === editId);
-      if (index !== -1) {
-        memories[index] = {
-          ...memories[index],
-          title: document.getElementById('photoTitle').value.trim(),
-          date: new Date(document.getElementById('photoDate').value).toISOString(),
-          description: document.getElementById('photoDesc').value.trim(),
-          images: [...currentImages],
-          persons: [...currentTags],
-          mood: currentMood
-        };
-        saveData();
-        showToast('回忆已更新！');
-      }
+      const updates = {
+        title: document.getElementById('photoTitle').value.trim(),
+        date: new Date(document.getElementById('photoDate').value).toISOString(),
+        description: document.getElementById('photoDesc').value.trim(),
+        images: [...currentImages],
+        persons: [...currentTags],
+        mood: currentMood,
+        updatedAt: new Date().toISOString()
+      };
+      
+      updateMemory(editId, updates).then(success => {
+        if (success) {
+          showToast('回忆已更新！');
+        }
+      });
     } else {
       // 新增模式
-      if (saveMemory('photo')) {
-        showToast('回忆已保存！');
-      }
+      saveMemoryFromForm('photo').then(success => {
+        if (success) {
+          showToast('回忆已保存！');
+        }
+      });
     }
     
     document.getElementById('addModal').classList.remove('show');
-    renderTimeline();
-    renderOnThisDay();
-    updatePersonFilters();
   });
   
   document.getElementById('chatForm').addEventListener('submit', (e) => {
@@ -1154,31 +1350,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const editId = document.getElementById('chatEditId').value;
     
     if (editId) {
-      const index = memories.findIndex(m => m.id === editId);
-      if (index !== -1) {
-        memories[index] = {
-          ...memories[index],
-          title: document.getElementById('chatTitle').value.trim(),
-          date: new Date(document.getElementById('chatDate').value).toISOString(),
-          description: document.getElementById('chatDesc').value.trim(),
-          messages: [...currentChatMessages],
-          images: [...currentImages],
-          persons: [...currentTags],
-          mood: currentMood
-        };
-        saveData();
-        showToast('回忆已更新！');
-      }
+      const updates = {
+        title: document.getElementById('chatTitle').value.trim(),
+        date: new Date(document.getElementById('chatDate').value).toISOString(),
+        description: document.getElementById('chatDesc').value.trim(),
+        messages: [...currentChatMessages],
+        images: [...currentImages],
+        persons: [...currentTags],
+        mood: currentMood,
+        updatedAt: new Date().toISOString()
+      };
+      
+      updateMemory(editId, updates).then(success => {
+        if (success) {
+          showToast('回忆已更新！');
+        }
+      });
     } else {
-      if (saveMemory('chat')) {
-        showToast('回忆已保存！');
-      }
+      saveMemoryFromForm('chat').then(success => {
+        if (success) {
+          showToast('回忆已保存！');
+        }
+      });
     }
     
     document.getElementById('addModal').classList.remove('show');
-    renderTimeline();
-    renderOnThisDay();
-    updatePersonFilters();
   });
   
   document.getElementById('storyForm').addEventListener('submit', (e) => {
@@ -1186,29 +1382,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const editId = document.getElementById('storyEditId').value;
     
     if (editId) {
-      const index = memories.findIndex(m => m.id === editId);
-      if (index !== -1) {
-        memories[index] = {
-          ...memories[index],
-          title: document.getElementById('storyTitle').value.trim(),
-          date: new Date(document.getElementById('storyDate').value).toISOString(),
-          content: document.getElementById('storyContent').value.trim(),
-          persons: [...currentTags],
-          mood: currentMood
-        };
-        saveData();
-        showToast('回忆已更新！');
-      }
+      const updates = {
+        title: document.getElementById('storyTitle').value.trim(),
+        date: new Date(document.getElementById('storyDate').value).toISOString(),
+        content: document.getElementById('storyContent').value.trim(),
+        persons: [...currentTags],
+        mood: currentMood,
+        updatedAt: new Date().toISOString()
+      };
+      
+      updateMemory(editId, updates).then(success => {
+        if (success) {
+          showToast('回忆已更新！');
+        }
+      });
     } else {
-      if (saveMemory('story')) {
-        showToast('回忆已保存！');
-      }
+      saveMemoryFromForm('story').then(success => {
+        if (success) {
+          showToast('回忆已保存！');
+        }
+      });
     }
     
     document.getElementById('addModal').classList.remove('show');
-    renderTimeline();
-    renderOnThisDay();
-    updatePersonFilters();
   });
   
   // 详情页操作
@@ -1252,7 +1448,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 分享功能
   document.getElementById('shareBtn').addEventListener('click', () => openShareModal());
   
-  document.getElementById('copyLink').addEventListener('click', copyShareLink);
+  document.getElementById('copyLink').addEventListener('click', () => {
+    const linkInput = document.getElementById('shareLink');
+    linkInput.select();
+    document.execCommand('copy');
+    showToast('链接已复制到剪贴板！');
+  });
   
   document.getElementById('enablePassword').addEventListener('change', (e) => {
     document.getElementById('sharePassword').disabled = !e.target.checked;
@@ -1261,105 +1462,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
+  // 登录相关
+  document.getElementById('loginBtn').addEventListener('click', login);
+  document.getElementById('registerBtn').addEventListener('click', register);
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+  
+  document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      login();
+    }
+  });
+  
   // 检查URL参数
   const urlParams = new URLSearchParams(window.location.search);
   const memoryId = urlParams.get('memory');
-  if (memoryId) {
+  if (memoryId && currentUser) {
     showMemoryDetail(memoryId);
   }
-});
-
-// ===== 添加示例数据（首次使用） =====
-function addSampleData() {
-  if (memories.length > 0) return;
-  
-  const sampleMemories = [
-    {
-      id: generateId(),
-      type: 'photo',
-      title: '宿舍第一张合照',
-      date: '2024-09-01T10:00:00.000Z',
-      description: '开学第一天，我们四个人在宿舍门口的合照。那时候还很拘谨，现在想想真怀念。',
-      images: [],
-      persons: ['小明', '阿杰', '老王'],
-      mood: 'warm',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: generateId(),
-      type: 'chat',
-      title: '凌晨三点的卧谈会',
-      date: '2024-10-15T03:00:00.000Z',
-      description: '那晚我们聊到了人生理想，虽然都很困但谁也不想先睡。',
-      messages: [
-        { speaker: '小明', content: '你们以后想做什么工作啊？' },
-        { speaker: '阿杰', content: '我想开一家咖啡店，每天闻着咖啡香醒来' },
-        { speaker: '老王', content: '我想当程序员，改变世界！' },
-        { speaker: '我', content: '我只想暴富...' }
-      ],
-      images: [],
-      persons: ['小明', '阿杰', '老王'],
-      mood: 'happy',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: generateId(),
-      type: 'story',
-      title: '记一次难忘的生日惊喜',
-      date: '2024-11-20T18:00:00.000Z',
-      content: '那是我大学过的第一个生日。本来以为会像往年一样平淡度过，没想到室友们偷偷准备了一个大惊喜。\n\n那天我从图书馆回来，一推开门，宿舍漆黑一片。我正想开灯，突然听到"砰"的一声，彩带从天而降，他们三个捧着蛋糕唱着生日歌走出来。\n\n蛋糕上写着"永远的404"，是我们宿舍的门牌号。那一刻我真的哭了，不是因为感动，是因为觉得自己太幸运了，能遇到这么好的室友。\n\n我们吃蛋糕、拍照、玩游戏到凌晨，那是我过得最开心的一个生日。',
-      persons: ['小明', '阿杰', '老王'],
-      mood: 'touched',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: generateId(),
-      type: 'photo',
-      title: '期末考前的图书馆突击',
-      date: '2025-01-10T09:00:00.000Z',
-      description: '期末周我们一起泡图书馆，虽然很累但有彼此陪伴就不觉得辛苦。',
-      images: [],
-      persons: ['小明', '阿杰'],
-      mood: 'funny',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: generateId(),
-      type: 'chat',
-      title: '外卖点单困难症',
-      date: '2025-03-08T12:00:00.000Z',
-      description: '每天中午都要经历的灵魂拷问：今天吃什么？',
-      messages: [
-        { speaker: '阿杰', content: '中午吃什么？' },
-        { speaker: '老王', content: '随便' },
-        { speaker: '小明', content: '我都行' },
-        { speaker: '我', content: '那点外卖吧' },
-        { speaker: '阿杰', content: '吃什么？' },
-        { speaker: '老王', content: '随便...' }
-      ],
-      images: [],
-      persons: ['小明', '阿杰', '老王'],
-      mood: 'funny',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: generateId(),
-      type: 'story',
-      title: '毕业前的最后一次聚餐',
-      date: '2025-06-20T19:00:00.000Z',
-      content: '时间过得真快，转眼就要毕业了。今晚是我们宿舍最后一次全员聚餐。\n\n我们选了学校旁边那家去了无数次的烧烤店，点了和往常一样的菜，喝着和往常一样的啤酒，聊着和往常一样的话题。但每个人都知道，这可能是最后一次了。\n\n小明说他要去北京闯荡，阿杰考上了本校的研究生，老王回老家当公务员，而我拿到了深圳的offer。\n\n散场的时候，我们拍了很多照片，说了很多"以后常联系"。虽然不知道这些承诺能不能兑现，但那一刻的真心是真实的。\n\n感谢这四年，感谢遇到你们。',
-      persons: ['小明', '阿杰', '老王'],
-      mood: 'miss',
-      createdAt: new Date().toISOString()
-    }
-  ];
-  
-  memories = sampleMemories;
-  saveData();
-  renderTimeline();
-  renderOnThisDay();
-  updatePersonFilters();
 }
 
-// 页面加载时检查是否需要添加示例数据
-addSampleData();
+function openShareModal(memoryId = null) {
+  const modal = document.getElementById('shareModal');
+  const linkInput = document.getElementById('shareLink');
+  
+  // 生成分享链接
+  const shareUrl = memoryId 
+    ? `${window.location.origin}${window.location.pathname}?memory=${memoryId}`
+    : `${window.location.origin}${window.location.pathname}`;
+  
+  linkInput.value = shareUrl;
+  
+  // 如果是单条分享，选中对应选项
+  if (memoryId) {
+    document.querySelector('input[name="shareType"][value="single"]').checked = true;
+  }
+  
+  modal.classList.add('show');
+}
