@@ -1,0 +1,6 @@
+# GitHub Pages configuration
+theme: jekyll-theme-minimal
+source: docs
+destination: _site
+baseurl: ""
+url: "https://3529083364chatgpt-debug.github.io/---/"
